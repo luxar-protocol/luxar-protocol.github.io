@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUXAR PROTOCOL | Terminal</title>
     
-    <link rel="icon" type="image/png" sizes="32x32" href="logo.png?v=1.2">
-    <link rel="apple-touch-icon" sizes="180x180" href="logo.png?v=1.2">
+    <link rel="icon" type="image/png" sizes="32x32" href="logo.png?v=5.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="logo.png?v=5.0">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -26,8 +26,14 @@
             gap: 12px;
         }
         
-        /* Loqonun kənarlarını təmizlədik və tam dairəvi etdik */
-        .nav-logo { width: 45px; height: 45px; display: block; object-fit: cover; border-radius: 50%; }
+        /* Loqonu daha peşəkar göstərmək üçün object-fit dəyişdirildi */
+        .nav-logo { 
+            width: 45px; 
+            height: 45px; 
+            display: block; 
+            object-fit: contain; 
+            border-radius: 50%; 
+        }
         .nav-brand { font-weight: 700; font-size: 1.6rem; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
 
         .hero-box { text-align: left; margin-bottom: 35px; }
@@ -78,7 +84,7 @@
 <body>
     <div class="container">
         <header class="header-nav">
-            <img src="logo.png?v=1.2" alt="LUXAR" class="nav-logo">
+            <img src="logo.png?v=5.0" alt="LUXAR" class="nav-logo">
             <span class="nav-brand">LUXAR</span>
         </header>
 
