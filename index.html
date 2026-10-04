@@ -145,12 +145,48 @@
         </div>
     </div>
 
+    <!-- Ethers.js Library for RPC interaction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script>
         function copyCA() {
             const caText = document.getElementById("ca").innerText;
             navigator.clipboard.writeText(caText);
             alert("Contract address copied!");
         }
+
+        async function fetchLiveCirculatingSupply() {
+            const contractAddress = "0x0c4C73CF6BC2DAA0C71F01F02631947c2De911e9";
+            const deadAddress = "0x000000000000000000000000000000000000dead";
+            const rpcUrl = "https://polygon-rpc.com";
+            
+            const abi = [
+                "function totalSupply() view returns (uint256)",
+                "function balanceOf(address) view returns (uint256)"
+            ];
+
+            try {
+                const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                const contract = new ethers.Contract(contractAddress, abi, provider);
+                
+                const [rawSupply, rawBurned] = await Promise.all([
+                    contract.totalSupply(),
+                    contract.balanceOf(deadAddress).catch(() => ethers.BigNumber.from(0))
+                ]);
+
+                const netSupply = rawSupply.sub(rawBurned);
+                const formattedSupply = ethers.utils.formatUnits(netSupply, 18);
+                const count = parseFloat(formattedSupply).toLocaleString('en-US', { maximumFractionDigits: 4 });
+                
+                const supplyElement = document.querySelector('.kletka .highlight');
+                if (supplyElement) {
+                    supplyElement.innerText = `${count} LUXAR`;
+                }
+            } catch (error) {
+                console.error("Live supply fetching error:", error);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchLiveCirculatingSupply);
     </script>
 </body>
 </html>
