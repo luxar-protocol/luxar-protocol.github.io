@@ -145,8 +145,8 @@
         </div>
     </div>
 
-    <!-- Ethers.js Library for RPC interaction -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <!-- Ethers.js CDN (unpkg üzerinden güvenilir yükleme) -->
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script>
         function copyCA() {
             const caText = document.getElementById("ca").innerText;
@@ -158,21 +158,43 @@
             const tokenAddress = "0x0c4C73CF6BC2DAA0C71F01F02631947c2De911e9";
             const ownerAddress = "0x00c565621D35B7a0F2EDd3D14f0c11138Ab5c1e8";
             const deadAddress = "0x000000000000000000000000000000000000dead";
-            
-            // Gələcəkdə hazırlayacağın distribusiya/mining kontraktının ünvanını buraya daxil edəcəksən
-            const contractVaultAddress = ""; 
+            const contractVaultAddress = ""; // İleride hazırlayacağın vault/dağıtım adresi
 
-            const rpcUrl = "https://polygon-rpc.com";
-            
+            // Ağ engellemelerini aşmak için yedekli RPC listesi
+            const rpcUrls = [
+                "https://polygon-bor-rpc.publicnode.com",
+                "https://1rpc.io/matic",
+                "https://polygon-rpc.com"
+            ];
+
             const abi = [
                 "function totalSupply() view returns (uint256)",
                 "function balanceOf(address) view returns (uint256)"
             ];
 
+            let provider = null;
+
+            // İlk çalışan RPC sunucusunu seçer
+            for (const url of rpcUrls) {
+                try {
+                    const tempProvider = new ethers.providers.JsonRpcProvider(url);
+                    await tempProvider.getBlockNumber();
+                    provider = tempProvider;
+                    break;
+                } catch (e) {
+                    console.warn(`RPC adresi başarısız: ${url}`);
+                }
+            }
+
+            if (!provider) {
+                console.error("Hiçbir RPC sunucusuna bağlanılamadı.");
+                updateSupplyUI("0 LUXAR");
+                return;
+            }
+
             try {
-                const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
                 const contract = new ethers.Contract(tokenAddress, abi, provider);
-                
+
                 const [rawSupply, rawBurned, rawOwner, rawVault] = await Promise.all([
                     contract.totalSupply(),
                     contract.balanceOf(deadAddress).catch(() => ethers.BigNumber.from(0)),
@@ -180,17 +202,27 @@
                     contractVaultAddress ? contract.balanceOf(contractVaultAddress).catch(() => ethers.BigNumber.from(0)) : ethers.BigNumber.from(0)
                 ]);
 
-                // Circulating = Total Supply - Burned - Owner - Vault Contract
-                const netCirculating = rawSupply.sub(rawBurned).sub(rawOwner).sub(rawVault);
+                // Circulating = Total Supply - Burned - Owner - Vault
+                let netCirculating = rawSupply.sub(rawBurned).sub(rawOwner).sub(rawVault);
+                
+                if (netCirculating.lt(0)) {
+                    netCirculating = ethers.BigNumber.from(0);
+                }
+
                 const formattedSupply = ethers.utils.formatUnits(netCirculating, 18);
                 const count = parseFloat(formattedSupply).toLocaleString('en-US', { maximumFractionDigits: 4 });
-                
-                const supplyElement = document.querySelector('.kletka .highlight');
-                if (supplyElement) {
-                    supplyElement.innerText = `${count} LUXAR`;
-                }
+
+                updateSupplyUI(`${count} LUXAR`);
             } catch (error) {
-                console.error("Live supply fetching error:", error);
+                console.error("Dolaşımdaki arz hesaplama hatası:", error);
+                updateSupplyUI("0 LUXAR");
+            }
+        }
+
+        function updateSupplyUI(text) {
+            const supplyElement = document.querySelector('.kletka .highlight');
+            if (supplyElement) {
+                supplyElement.innerText = text;
             }
         }
 
