@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Redirect .vercel.app traffic to main domain -->
+    <!-- BÜTÜN KƏNAR DOMENLƏRİ (github.io, vercel.app və s.) ƏSAS DOMENƏ YÖNLƏNDİRMƏ -->
     <script>
-      if (window.location.hostname.includes("vercel.app")) {
-        window.location.replace("https://luxarprotocol.com" + window.location.pathname + window.location.search);
-      }
+      (function() {
+        var targetDomain = "luxarprotocol.com";
+        // Əgər girilən domen ana domen deyilsə və local test mühiti deyilsə, anında ana domenə tullayır
+        if (window.location.hostname !== targetDomain && window.location.hostname !== "www." + targetDomain && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+          window.location.replace("https://" + targetDomain + window.location.pathname + window.location.search);
+        }
+      })();
     </script>
 
     <meta charset="UTF-8">
