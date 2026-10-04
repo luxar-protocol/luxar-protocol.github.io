@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Redirect .vercel.app traffic to main domain -->
+    <script>
+      if (window.location.hostname.includes("vercel.app")) {
+        window.location.replace("https://luxarprotocol.com" + window.location.pathname + window.location.search);
+      }
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUXAR PROTOCOL | Terminal</title>
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://luxarprotocol.com/" />
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Luxar Protocol is a decentralized digital scarcity token built on the Polygon network with a fixed supply of 50,000 LUXAR.">
@@ -20,17 +30,17 @@
     <meta name="twitter:site" content="@luxarprotocol">
     <meta name="twitter:title" content="LUXAR PROTOCOL | Terminal">
     <meta name="twitter:description" content="Mathematical Scarcity. Total Transparency. Polygon-based store of value.">
-   
+    
     <link rel="icon" type="image/png" sizes="32x32" href="logo.png?v=5.0">
     <link rel="apple-touch-icon" sizes="180x180" href="logo.png?v=5.0">
-   
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #050505; --card: #0d0d0d; --poly: #8247e5; --text: #f0f0f0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; min-height: 100vh; padding: 10px 20px; }
-       
+        
         .container { width: 100%; max-width: 420px; }
 
         .header-nav {
@@ -41,8 +51,7 @@
             margin-bottom: 15px;
             gap: 12px;
         }
-       
-        /* Loqonu daha peşəkar göstərmək üçün object-fit dəyişdirildi */
+        
         .nav-logo {
             width: 45px;
             height: 45px;
@@ -62,7 +71,7 @@
         .label { font-size: 0.55rem; color: #555; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
         .value { font-size: 0.95rem; color: #ccc; }
         .highlight { color: var(--poly); font-weight: 700; }
-       
+        
         .proof-btn {
             position: absolute; right: 15px; top: 18px;
             font-size: 0.6rem; color: var(--poly); border: 1px solid #222;
@@ -74,7 +83,7 @@
         .ca-box { background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; cursor: pointer; text-align: left; transition: 0.3s; }
         .ca-box:hover { border-color: var(--poly); }
         code { font-size: 0.65rem; color: #555; word-break: break-all; }
-       
+        
         .scan-link {
             display: inline-block;
             margin-top: 12px;
