@@ -71,13 +71,6 @@
         .label { font-size: 0.55rem; color: #555; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
         .value { font-size: 0.95rem; color: #ccc; }
         .highlight { color: var(--poly); font-weight: 700; }
-        
-        .proof-btn {
-            position: absolute; right: 15px; top: 18px;
-            font-size: 0.6rem; color: var(--poly); border: 1px solid #222;
-            padding: 5px 10px; border-radius: 8px; text-decoration: none;
-            text-transform: uppercase; font-weight: 700;
-        }
 
         .ca-container { margin-bottom: 30px; text-align: center; }
         .ca-box { background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; cursor: pointer; text-align: left; transition: 0.3s; }
@@ -145,8 +138,6 @@
         </div>
     </div>
 
-    <!-- Ethers.js CDN (unpkg üzerinden güvenilir yükleme) -->
-    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     <script>
         function copyCA() {
             const caText = document.getElementById("ca").innerText;
@@ -157,76 +148,39 @@
         async function fetchLiveCirculatingSupply() {
             const tokenAddress = "0x0c4C73CF6BC2DAA0C71F01F02631947c2De911e9";
             const ownerAddress = "0x00c565621D35B7a0F2EDd3D14f0c11138Ab5c1e8";
-            const deadAddress = "0x000000000000000000000000000000000000dead";
-            const contractVaultAddress = ""; // İleride hazırlayacağın vault/dağıtım adresi
-
-            // Ağ engellemelerini aşmak için yedekli RPC listesi
-            const rpcUrls = [
-                "https://polygon-bor-rpc.publicnode.com",
-                "https://1rpc.io/matic",
-                "https://polygon-rpc.com"
-            ];
-
-            const abi = [
-                "function totalSupply() view returns (uint256)",
-                "function balanceOf(address) view returns (uint256)"
-            ];
-
-            let provider = null;
-
-            // İlk çalışan RPC sunucusunu seçer
-            for (const url of rpcUrls) {
-                try {
-                    const tempProvider = new ethers.providers.JsonRpcProvider(url);
-                    await tempProvider.getBlockNumber();
-                    provider = tempProvider;
-                    break;
-                } catch (e) {
-                    console.warn(`RPC adresi başarısız: ${url}`);
-                }
-            }
-
-            if (!provider) {
-                console.error("Hiçbir RPC sunucusuna bağlanılamadı.");
-                updateSupplyUI("0 LUXAR");
-                return;
-            }
+            
+            // Polygonscan REST API vasitəsilə owner balansını anında çəkirik
+            const apiUrl = `https://api.polygonscan.com/api?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${ownerAddress}&tag=latest`;
 
             try {
-                const contract = new ethers.Contract(tokenAddress, abi, provider);
+                const response = await fetch(apiUrl);
+                const data = await response.json();
 
-                const [rawSupply, rawBurned, rawOwner, rawVault] = await Promise.all([
-                    contract.totalSupply(),
-                    contract.balanceOf(deadAddress).catch(() => ethers.BigNumber.from(0)),
-                    contract.balanceOf(ownerAddress).catch(() => ethers.BigNumber.from(0)),
-                    contractVaultAddress ? contract.balanceOf(contractVaultAddress).catch(() => ethers.BigNumber.from(0)) : ethers.BigNumber.from(0)
-                ]);
+                if (data.status === "1") {
+                    const rawOwnerBalance = BigInt(data.result);
+                    const totalSupplyRaw = BigInt("50000000000000000000000"); // 50,000 * 10^18
 
-                // Circulating = Total Supply - Burned - Owner - Vault
-                let netCirculating = rawSupply.sub(rawBurned).sub(rawOwner).sub(rawVault);
-                
-                if (netCirculating.lt(0)) {
-                    netCirculating = ethers.BigNumber.from(0);
+                    let circulatingRaw = totalSupplyRaw - rawOwnerBalance;
+                    if (circulatingRaw < 0n) circulatingRaw = 0n;
+
+                    // Decimals (18) hesablanması
+                    const formatted = Number(circulatingRaw) / 1e18;
+                    const count = formatted.toLocaleString('en-US', { maximumFractionDigits: 4 });
+
+                    const supplyElement = document.querySelector('.kletka .highlight');
+                    if (supplyElement) {
+                        supplyElement.innerText = `${count} LUXAR`;
+                    }
+                } else {
+                    document.querySelector('.kletka .highlight').innerText = "0 LUXAR";
                 }
-
-                const formattedSupply = ethers.utils.formatUnits(netCirculating, 18);
-                const count = parseFloat(formattedSupply).toLocaleString('en-US', { maximumFractionDigits: 4 });
-
-                updateSupplyUI(`${count} LUXAR`);
             } catch (error) {
-                console.error("Dolaşımdaki arz hesaplama hatası:", error);
-                updateSupplyUI("0 LUXAR");
+                console.error("API Fetch Error:", error);
+                document.querySelector('.kletka .highlight').innerText = "0 LUXAR";
             }
         }
 
-        function updateSupplyUI(text) {
-            const supplyElement = document.querySelector('.kletka .highlight');
-            if (supplyElement) {
-                supplyElement.innerText = text;
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', fetchLiveCirculatingSupply);
+        document.addEventListener('DOMContentLoaded', fetchLiveCirculatingSupply);
     </script>
 </body>
 </html>
