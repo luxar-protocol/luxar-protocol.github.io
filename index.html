@@ -122,7 +122,7 @@
             <div class="kletka"><span class="label">Total Max Supply</span><span class="value">50,000 LUXAR</span></div>
             <div class="kletka">
                 <span class="label">Circulating Supply</span>
-                <span class="value highlight">50,000 LUXAR</span>
+                <span class="value highlight">Loading...</span>
             </div>
         </div>
 
@@ -155,8 +155,13 @@
         }
 
         async function fetchLiveCirculatingSupply() {
-            const contractAddress = "0x0c4C73CF6BC2DAA0C71F01F02631947c2De911e9";
+            const tokenAddress = "0x0c4C73CF6BC2DAA0C71F01F02631947c2De911e9";
+            const ownerAddress = "0x00c565621D35B7a0F2EDd3D14f0c11138Ab5c1e8";
             const deadAddress = "0x000000000000000000000000000000000000dead";
+            
+            // Gələcəkdə hazırlayacağın distribusiya/mining kontraktının ünvanını buraya daxil edəcəksən
+            const contractVaultAddress = ""; 
+
             const rpcUrl = "https://polygon-rpc.com";
             
             const abi = [
@@ -166,15 +171,18 @@
 
             try {
                 const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-                const contract = new ethers.Contract(contractAddress, abi, provider);
+                const contract = new ethers.Contract(tokenAddress, abi, provider);
                 
-                const [rawSupply, rawBurned] = await Promise.all([
+                const [rawSupply, rawBurned, rawOwner, rawVault] = await Promise.all([
                     contract.totalSupply(),
-                    contract.balanceOf(deadAddress).catch(() => ethers.BigNumber.from(0))
+                    contract.balanceOf(deadAddress).catch(() => ethers.BigNumber.from(0)),
+                    contract.balanceOf(ownerAddress).catch(() => ethers.BigNumber.from(0)),
+                    contractVaultAddress ? contract.balanceOf(contractVaultAddress).catch(() => ethers.BigNumber.from(0)) : ethers.BigNumber.from(0)
                 ]);
 
-                const netSupply = rawSupply.sub(rawBurned);
-                const formattedSupply = ethers.utils.formatUnits(netSupply, 18);
+                // Circulating = Total Supply - Burned - Owner - Vault Contract
+                const netCirculating = rawSupply.sub(rawBurned).sub(rawOwner).sub(rawVault);
+                const formattedSupply = ethers.utils.formatUnits(netCirculating, 18);
                 const count = parseFloat(formattedSupply).toLocaleString('en-US', { maximumFractionDigits: 4 });
                 
                 const supplyElement = document.querySelector('.kletka .highlight');
